@@ -26,6 +26,11 @@ export default async function DashboardSettingsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
             <p className="text-gray-500 mt-2">Manage your profile and account preferences.</p>
+            {profile?.is_admin && (
+              <div className="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                Admin user
+              </div>
+            )}
           </div>
           <Link href="/dashboard" className="text-blue-600 hover:underline">Back to dashboard</Link>
         </div>

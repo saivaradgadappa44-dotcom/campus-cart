@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { LogOut, Settings, Package, Heart, CheckCircle, Clock } from "lucide-react"
+import { Settings, Package, Heart, CheckCircle, Clock, Lock } from "lucide-react"
 import ProductCard from "@/components/ProductCard"
 import LogoutButton from "./LogoutButton"
 
@@ -59,8 +59,12 @@ export default async function Dashboard() {
               )}
             </div>
             <h2 className="text-xl font-bold">{profile?.full_name}</h2>
-            <p className="text-sm text-gray-500 mb-6">{profile?.college_name}</p>
-            
+            <p className="text-sm text-gray-500 mb-2">{profile?.college_name}</p>
+            {profile?.is_admin && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold mb-4">
+                Admin Access
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4 border-t border-gray-100 dark:border-zinc-800 pt-6">
               <div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">{activeListings.length}</div>
@@ -78,6 +82,12 @@ export default async function Dashboard() {
               <Settings className="w-5 h-5 text-gray-400" />
               <span className="font-medium">Profile Settings</span>
             </Link>
+            {profile?.is_admin && (
+              <Link href="/admin" className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors border-b border-gray-100 dark:border-zinc-800">
+                <Lock className="w-5 h-5 text-gray-400" />
+                <span className="font-medium">Admin Panel</span>
+              </Link>
+            )}
             <Link href="/chat" className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
               <Heart className="w-5 h-5 text-gray-400" />
               <span className="font-medium">Saved Items</span>

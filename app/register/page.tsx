@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
@@ -12,6 +12,7 @@ export default function Register() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [collegeName, setCollegeName] = useState("")
+  const [adminCode, setAdminCode] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -24,14 +25,28 @@ export default function Register() {
     setLoading(true)
     setError(null)
 
+    const isAdmin = adminCode.trim() !== "" && adminCode.trim() === process.env.NEXT_PUBLIC_ADMIN_ACCESS_CODE
+
+    if (adminCode.trim() !== "" && !isAdmin) {
+      setError("Invalid admin access code.")
+      setLoading(false)
+      return
+    }
+
+    const metadata: Record<string, unknown> = {
+      full_name: fullName,
+      college_name: collegeName,
+    }
+
+    if (isAdmin) {
+      metadata.is_admin = true
+    }
+
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          college_name: collegeName,
-        }
+        data: metadata,
       }
     })
 
@@ -111,6 +126,20 @@ export default function Register() {
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Admin Access Code (optional)</label>
+            <div className="relative">
+              <input
+                type="password"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                placeholder="Enter admin code if you have one"
+                className="w-full pr-4 py-2 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <p className="text-xs text-gray-500 ml-1">Only use this if you were invited to manage site settings.</p>
           </div>
 
           <div className="space-y-2">

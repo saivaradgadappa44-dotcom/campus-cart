@@ -22,9 +22,16 @@ CREATE TABLE IF NOT EXISTS profiles (
   full_name TEXT NOT NULL,
   avatar_url TEXT,
   college_name TEXT,
+  is_admin BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+DO $$ BEGIN
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false NOT NULL;
+EXCEPTION
+  WHEN duplicate_column THEN NULL;
+END $$;
 
 -- Categories Table
 CREATE TABLE IF NOT EXISTS categories (
@@ -93,7 +100,18 @@ DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON profiles;
 CREATE POLICY "Public profiles are viewable by everyone." ON profiles FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can update own profile." ON profiles;
-CREATE POLICY "Users can update own profile." ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile." ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Admins can update any profile." ON profiles;
+CREATE POLICY "Admins can update any profile." ON profiles FOR UPDATE USING (
+  auth.uid() = id OR EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true
+  )
+) WITH CHECK (
+  auth.uid() = id OR EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true
+  )
+);
 
 DROP POLICY IF EXISTS "Users can insert own profile." ON profiles;
 CREATE POLICY "Users can insert own profile." ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
@@ -151,12 +169,17 @@ CREATE POLICY "Participants can insert messages." ON messages FOR INSERT WITH CH
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  INSERT INTO public.profiles (id, email, full_name, avatar_url, college_name, is_admin)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'full_name', 'New User'),
-    new.raw_user_meta_data->>'avatar_url'
+    new.raw_user_meta_data->>'avatar_url',
+    new.raw_user_meta_data->>'college_name',
+    CASE new.raw_user_meta_data->>'is_admin'
+      WHEN 'true' THEN true
+      ELSE false
+    END
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
