@@ -77,7 +77,7 @@ export default function PasswordResetForm({ userEmail }: { userEmail?: string })
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail || '', {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/settings`,
+        redirectTo: `${window.location.origin}/login`,
       })
 
       if (error) {
