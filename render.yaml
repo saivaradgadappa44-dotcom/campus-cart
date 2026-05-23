@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: campuscart
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /_next/static/chunks/main.js
