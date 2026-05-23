@@ -84,11 +84,29 @@ export default function ActionButtons({ productId, sellerId, isOwner, status, se
     }
   }
 
+  const undoSold = async () => {
+    setLoading(true)
+    await supabase.from('products').update({ status: 'active' }).eq('id', productId)
+    setLoading(false)
+    router.refresh()
+  }
+
   if (status === 'sold') {
     return (
-      <div className="w-full bg-gray-100 dark:bg-zinc-800 text-gray-500 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 border border-gray-200 dark:border-zinc-700 shadow-sm">
-        <CheckCircle className="w-5 h-5" />
-        This item has been sold
+      <div className="flex flex-col gap-3">
+        <div className="w-full bg-gray-100 dark:bg-zinc-800 text-gray-500 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 border border-gray-200 dark:border-zinc-700 shadow-sm">
+          <CheckCircle className="w-5 h-5" />
+          This item has been sold
+        </div>
+        {isOwner && (
+          <button
+            onClick={undoSold}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg shadow-blue-600/20 transition-all flex justify-center items-center gap-2"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Undo Sold</span>}
+          </button>
+        )}
       </div>
     )
   }
