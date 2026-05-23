@@ -34,7 +34,7 @@ export default function PasswordResetForm({ userEmail }: { userEmail?: string })
     setIsLoading(true)
 
     // Validation
-    if (!formData.newPassword || !formData.confirmPassword) {
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
       toast.error('Please fill in all password fields')
       setIsLoading(false)
       return
@@ -53,6 +53,21 @@ export default function PasswordResetForm({ userEmail }: { userEmail?: string })
     }
 
     try {
+      if (!userEmail) {
+        toast.error('Unable to update password: missing user email.')
+        return
+      }
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: formData.currentPassword,
+      })
+
+      if (authError) {
+        toast.error('Current password is incorrect.')
+        return
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: formData.newPassword,
       })
@@ -152,6 +167,29 @@ export default function PasswordResetForm({ userEmail }: { userEmail?: string })
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+              Current Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPasswords.current ? 'text' : 'password'}
+                name="currentPassword"
+                value={formData.currentPassword}
+                onChange={handleChange}
+                placeholder="Enter current password"
+                className="w-full px-4 py-2.5 pr-10 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('current')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
